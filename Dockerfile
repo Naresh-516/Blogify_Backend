@@ -1,9 +1,6 @@
-FROM tomcat:10.1-jdk17
+FROM openjdk:17-jdk
 
-RUN rm -rf /usr/local/tomcat/webapps/*
+WORKDIR /app
+COPY target/Blog-Writer-01-0.0.1-SNAPSHOT.war app.war
 
-COPY target/Blog-Writer-01.war /usr/local/tomcat/webapps/ROOT.war
-
-EXPOSE 8080
-
-CMD ["catalina.sh", "run"]
+ENTRYPOINT ["java", "-jar", "app.war"]
