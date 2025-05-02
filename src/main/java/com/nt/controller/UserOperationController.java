@@ -23,7 +23,7 @@ import com.nt.service.IUserService;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173") 
 public class UserOperationController {
 	@Autowired
 	private IUserService serv;

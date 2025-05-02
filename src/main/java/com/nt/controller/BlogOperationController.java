@@ -19,7 +19,7 @@ import com.nt.dto.BlogResponseDTO;
 import com.nt.service.BlogServiceImpl;
 
 @RestController
-@CrossOrigin(origins="http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173") 
 @RequestMapping("/blog")
 public class BlogOperationController {
 	@Autowired

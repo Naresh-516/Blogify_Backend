@@ -17,6 +17,7 @@ import com.nt.service.BlogServiceImpl;
 
 @RestController
 @RequestMapping("/admin")
+@CrossOrigin(origins = "http://localhost:5173") 
 public class AdminOperationController {
 
     @Autowired
