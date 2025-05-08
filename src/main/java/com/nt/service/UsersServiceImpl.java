@@ -24,12 +24,12 @@ public class UsersServiceImpl implements IUserService{
 
 	@Override
 	public String registerUser(UserRegisterDTO dto) {
-		if(userrepo.findByEmail(dto.getEmail()).isPresent()) {
+		if(userrepo.findByEmail(dto.getEmail().toLowerCase()).isPresent()) {
 			return "Email already Registered";
 		}
 		Users user=new Users();
 		user.setName(dto.getName());
-		user.setEmail(dto.getEmail());
+		user.setEmail(dto.getEmail().toLowerCase());
 		user.setPassword(passwordEncoder.encode(dto.getPassword()));
 		user.setAddress(dto.getAddress());
 		user.setGender(dto.getGender());
@@ -41,7 +41,7 @@ public class UsersServiceImpl implements IUserService{
 
 	@Override
 	public UserResponseDTO loginUser(UserLoginDTO dto) {
-		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail());
+		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail().toLowerCase());
 		if(optionaluser.isEmpty()) return null;
 		Users user=optionaluser.get();
 		if(!passwordEncoder.matches(dto.getPassword(),user.getPassword())) {
