@@ -133,7 +133,11 @@ public class BlogServiceImpl implements IBlogService{
 		del.setDeletedAt(LocalDateTime.now());
 		del.setUserName(blog.getUser().getName());
 		delrepo.save(del);
+		Users user = blog.getUser();
+		user.getBlogs().remove(blog);
+		userrepo.save(user);
 		blogrepo.delete(blog);
+	
 	}
 
 	@Override
