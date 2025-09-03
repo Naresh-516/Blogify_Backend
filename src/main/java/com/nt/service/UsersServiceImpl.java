@@ -2,8 +2,9 @@ package com.nt.service;
 
 import java.util.Optional;
 
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,12 @@ import com.nt.dto.UserRegisterDTO;
 import com.nt.dto.UserResponseDTO;
 import com.nt.dto.UserUpdateDTO;
 import com.nt.entity.Users;
+import com.nt.exception.EmailAlreadyExistsException;
+import com.nt.exception.PasswordMismatchException;
+import com.nt.exception.UserNotFoundException;
+import com.nt.repo.BlogRepository;
 import com.nt.repo.UserRepository;
+import com.nt.security.JwtUtil;
 @Service
 public class UsersServiceImpl implements IUserService{
 
@@ -21,11 +27,17 @@ public class UsersServiceImpl implements IUserService{
 	private UserRepository userrepo;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	@Autowired
+	private JwtUtil jwtutil;
+	@Autowired
+	private AuthenticationManager authenticationManager;
+	@Autowired
+	private BlogRepository blogrepo;
 
 	@Override
 	public String registerUser(UserRegisterDTO dto) {
 		if(userrepo.findByEmail(dto.getEmail().toLowerCase()).isPresent()) {
-			return "Email already Registered";
+			throw new EmailAlreadyExistsException("Email already registered: " + dto.getEmail());
 		}
 		Users user=new Users();
 		user.setName(dto.getName());
@@ -40,28 +52,51 @@ public class UsersServiceImpl implements IUserService{
 
 
 	@Override
-	public UserResponseDTO loginUser(UserLoginDTO dto) {
-		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail().toLowerCase());
-		if(optionaluser.isEmpty()) return null;
-		Users user=optionaluser.get();
-		if(!passwordEncoder.matches(dto.getPassword(),user.getPassword())) {
-			return null;
-		}
-		UserResponseDTO res=new UserResponseDTO();
-		res.setId(user.getId());
+	public UserResponseDTO loginUser(UserLoginDTO request) {
+//		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail().toLowerCase());
+//		if(optionaluser.isEmpty()) return null;
+//		Users user=optionaluser.get();
+//		if(!passwordEncoder.matches(dto.getPassword(),user.getPassword())) {
+//			return null;
+//		}
+//		UserResponseDTO res=new UserResponseDTO();
+//		res.setId(user.getId());
+//		res.setName(user.getName());
+//		res.setEmail(user.getEmail());
+//		res.setGender(user.getGender());
+//		res.setMobile(user.getMobile());
+//		res.setAddress(user.getAddress());
+//		return res;
+		try {
+    	    authenticationManager.authenticate(
+    	        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+    	    );
+    	} catch (Exception e) {
+    	    System.out.println("Login failed: " + e.getMessage());
+    	    throw e;
+    	}
+        Users user = userrepo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String token = jwtutil.generateToken(user);
+        UserResponseDTO res=new UserResponseDTO();
+ 		res.setId(user.getId());
 		res.setName(user.getName());
 		res.setEmail(user.getEmail());
 		res.setGender(user.getGender());
 		res.setMobile(user.getMobile());
 		res.setAddress(user.getAddress());
+		res.setToken(token);
 		return res;
+
+       // return new AuthResponse(token, user.getMail(), user.getRole());
 	}
 
 
 	@Override
-	public UserResponseDTO updateUserProfile(String userId, UserUpdateDTO dto) {
-		Users user = userrepo.findById(userId)
-	            .orElseThrow(() -> new RuntimeException("User not found"));
+	public UserResponseDTO updateUserProfile(String email, UserUpdateDTO dto) {
+		Users user = userrepo.findByEmail(email)
+	            .orElseThrow(() -> new UserNotFoundException("User not found"));
 
 	    user.setName(dto.getName());
 	    user.setAddress(dto.getAddress());
@@ -83,12 +118,12 @@ public class UsersServiceImpl implements IUserService{
 
 
 	@Override
-	public String changePassword(String userId, ChangePasswordDTO dto) {
-		Users user = userrepo.findById(userId)
-	            .orElseThrow(() -> new RuntimeException("User not found"));
+	public String changePassword(String email, ChangePasswordDTO dto) {
+		Users user = userrepo.findByEmail(email)
+	            .orElseThrow(() -> new UserNotFoundException("User not found"));
 
 	    if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
-	        throw new RuntimeException("Old password is incorrect");
+	        throw new PasswordMismatchException("Old password is incorrect");
 	    }
 
 	    user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
@@ -98,23 +133,19 @@ public class UsersServiceImpl implements IUserService{
 
 	}
 
-
-	@Override
-	public Optional<Users> findById(String userId) {
-		
-		return userrepo.findById(userId);
-	}
-
-
 	@Override
 	public String deleteUser(UserLoginDTO dto) {
 		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail());
 		if(optionaluser.isEmpty()) return "Invalid EmailID";
 		Users user=optionaluser.get();
 		if(!passwordEncoder.matches(dto.getPassword(),user.getPassword())) {
-			throw new RuntimeException("Invalid Password");
+			throw new PasswordMismatchException("password is incorrect");
 		}
+		
+		 blogrepo.deleteAll(blogrepo.findByUserid(user.getId()));
+		
 		userrepo.delete(user);
+		
 		return "Account deleted Successfully";
 	}
 	

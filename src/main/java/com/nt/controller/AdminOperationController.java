@@ -17,7 +17,7 @@ import com.nt.service.BlogServiceImpl;
 
 @RestController
 @RequestMapping("/admin")
-@CrossOrigin(origins = "https://blogifyverse.netlify.app") 
+@CrossOrigin(origins = {"https://blogifyverse.netlify.app", "http://localhost:5173"}) 
 public class AdminOperationController {
 
     @Autowired
@@ -40,7 +40,6 @@ public class AdminOperationController {
 
     @DeleteMapping("/delete/{blogId}")
     public ResponseEntity<String> deleteBlogByAdmin(@PathVariable String blogId) { 
-        // MongoDB ID is String type now
         blogserv.admindeleteBlog(blogId);
         return ResponseEntity.ok("Blog Deleted Successfully");
     }

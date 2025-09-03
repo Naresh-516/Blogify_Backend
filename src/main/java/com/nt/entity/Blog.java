@@ -23,9 +23,7 @@ public class Blog {
 
     private String tags;
 
-    @DBRef
-    @JsonIgnore
-    private Users user; 
+    private String userid; 
 
     private LocalDateTime postedAt;
 

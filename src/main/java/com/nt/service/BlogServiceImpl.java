@@ -13,6 +13,8 @@ import com.nt.dto.BlogResponseDTO;
 import com.nt.entity.Blog;
 import com.nt.entity.DeletedBlogs;
 import com.nt.entity.Users;
+import com.nt.exception.BlogNotFoundException;
+import com.nt.exception.UserNotFoundException;
 import com.nt.repo.BlogRepository;
 import com.nt.repo.DeletedBlogRepository;
 import com.nt.repo.UserRepository;
@@ -26,17 +28,17 @@ public class BlogServiceImpl implements IBlogService{
     private DeletedBlogRepository delrepo;
 
 	@Override
-	public BlogResponseDTO createBlog(BlogRequestDTO dto) {
-		Optional<Users> optuser=userrepo.findById(dto.getUserId());
+	public BlogResponseDTO createBlog(BlogRequestDTO dto,String email) {
+		Optional<Users> optuser=userrepo.findByEmail(email);
 		if(optuser.isEmpty()) {
-			throw new RuntimeException("User Not Found");
+			throw new UserNotFoundException("User not found");
 		}
 		Users user=optuser.get();
 		Blog blog=new Blog();
 		blog.setTitle(dto.getTitle());
 		blog.setContent(dto.getContent());
 		blog.setTags(dto.getTags());
-		blog.setUser(user);
+		blog.setUserid(user.getId());
 
 	        // Set timestamps manually
 	        LocalDateTime currentDateTime = LocalDateTime.now();
@@ -47,7 +49,7 @@ public class BlogServiceImpl implements IBlogService{
 	        }
 	        blog.setUpdatedAt(currentDateTime);
 		Blog saved=blogrepo.save(blog);
-		Optional<Users> user01=userrepo.findById(dto.getUserId());
+		Optional<Users> user01=userrepo.findByEmail(email);
 		if(user01.isPresent()) {
 			Users user11=user01.get();
 		user11.getBlogs().add(blog);
@@ -64,12 +66,12 @@ public class BlogServiceImpl implements IBlogService{
 	}
 
 	@Override
-	public List<BlogResponseDTO> getBlogsByUser(String userId) {
-		Optional<Users> optuser=userrepo.findById(userId);
+	public List<BlogResponseDTO> getBlogsByUser(String email) {
+		Optional<Users> optuser=userrepo.findByEmail(email);
 		if(optuser.isEmpty()) {
-			throw new RuntimeException("User Not Found");
+			throw new UserNotFoundException("User not found");
 		}
-		List<Blog> blogs=blogrepo.findByUser(optuser.get());
+		List<Blog> blogs=blogrepo.findByUserid(optuser.get().getId());
 		return blogs.stream().map(this::convertToDto).collect(Collectors.toList());
 	}
 	private BlogResponseDTO convertToDto(Blog blog) {
@@ -80,8 +82,8 @@ public class BlogServiceImpl implements IBlogService{
 		dto.setTags(blog.getTags());
 		dto.setPostedAt(blog.getPostedAt());
 		dto.setUpdatedAt(blog.getUpdatedAt());
-		dto.setUserId(blog.getUser().getId());
-		dto.setUserName(blog.getUser().getName());
+		dto.setUserId(blog.getUserid());
+		dto.setUserName(userrepo.findById(blog.getUserid()).get().getName());
 		return dto;
 		}
 	private BlogResponseDTO convertToDto(DeletedBlogs deletedBlog) {
@@ -99,41 +101,48 @@ public class BlogServiceImpl implements IBlogService{
 
 
 	@Override
-	public BlogResponseDTO updatedBlog(String blogId, BlogRequestDTO dto) {
-		Blog blog=blogrepo.findById(blogId).orElseThrow(()->new RuntimeException("Blog not Found"));
-		if(!blog.getUser().getId().equals(dto.getUserId())) {
-			throw new RuntimeException("Unauthorized to update this Blog");
-		}
-		blog.setTitle(dto.getTitle());
-		blog.setContent(dto.getContent());
-		blog.setTags(dto.getTags());
-		 LocalDateTime currentDateTime = LocalDateTime.now();
-		 blog.setUpdatedAt(currentDateTime);
-		Blog updatedblog=blogrepo.save(blog);
-	
-		return convertToDto(updatedblog);
+	public BlogResponseDTO updatedBlog(String blogId, BlogRequestDTO dto, String email) {
+	    Blog blog = blogrepo.findById(blogId)
+	            .orElseThrow(() -> new BlogNotFoundException("Blog not Found"));
+
+	    // fetch logged-in user
+	    Users loggedInUser = userrepo.findByEmail(email)
+	            .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+	    // check ownership
+	    if (!blog.getUserid().equals(loggedInUser.getId())) {
+	        throw new RuntimeException("Unauthorized to update this Blog");
+	    }
+
+	    blog.setTitle(dto.getTitle());
+	    blog.setContent(dto.getContent());
+	    blog.setTags(dto.getTags());
+	    blog.setUpdatedAt(LocalDateTime.now());
+
+	    Blog updatedblog = blogrepo.save(blog);
+	    return convertToDto(updatedblog);
 	}
 
 	@Override
 	public void deletedBlog(String blogId) {
-		Blog blog=blogrepo.findById(blogId).orElseThrow(()-> new RuntimeException("Blog not Found"));
+		Blog blog=blogrepo.findById(blogId).orElseThrow(()-> new BlogNotFoundException("Blog not Found"));
 		blogrepo.delete(blog);
 	}
 
 	@Override
 	public void admindeleteBlog(String blogId) {
-		Blog blog=blogrepo.findById(blogId).orElseThrow(()-> new RuntimeException("Blog not Found"));
+		Blog blog=blogrepo.findById(blogId).orElseThrow(()-> new BlogNotFoundException("Blog not Found"));
 		DeletedBlogs del=new DeletedBlogs();
 		del.setOriginalId(blog.getId());
 		del.setTitle(blog.getTitle());
 		del.setContent(blog.getContent());
 		del.setTags(blog.getTags());
-		del.setUserId(blog.getUser().getId());
+		del.setUserId(blog.getUserid());
 		del.setCreatedAt(blog.getPostedAt());
 		del.setDeletedAt(LocalDateTime.now());
-		del.setUserName(blog.getUser().getName());
+		del.setUserName(userrepo.findById(blog.getUserid()).get().getName());
 		delrepo.save(del);
-		Users user = blog.getUser();
+		Users user = userrepo.findById(blog.getUserid()).get();
 		user.getBlogs().remove(blog);
 		userrepo.save(user);
 		blogrepo.delete(blog);
@@ -144,6 +153,17 @@ public class BlogServiceImpl implements IBlogService{
 	public List<BlogResponseDTO> getDeletedBlogs() {
 		List<DeletedBlogs> blogs=delrepo.findAll();
 		return blogs.stream().map(this::convertToDto).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<BlogResponseDTO> getBlogsByUser02(String UserId) {
+		Optional<Users> optuser=userrepo.findById(UserId);
+		if(optuser.isEmpty()) {
+			throw new UserNotFoundException("User not found");
+		}
+		List<Blog> blogs=blogrepo.findByUserid(optuser.get().getId());
+		return blogs.stream().map(this::convertToDto).collect(Collectors.toList());
+		
 	}
 	
 

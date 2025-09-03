@@ -1,15 +1,14 @@
 package com.nt.controller;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,8 +17,10 @@ import com.nt.dto.UserLoginDTO;
 import com.nt.dto.UserRegisterDTO;
 import com.nt.dto.UserResponseDTO;
 import com.nt.dto.UserUpdateDTO;
-import com.nt.entity.Users;
 import com.nt.service.IUserService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/user")
@@ -42,17 +43,32 @@ public class UserOperationController {
 		}
 		return ResponseEntity.ok(user);
 	}
-	@PutMapping("/update-profile/{userId}")
-	public ResponseEntity<UserResponseDTO> updateProfile(@PathVariable String userId,
-	                                                     @RequestBody UserUpdateDTO dto) {
-	    return ResponseEntity.ok(serv.updateUserProfile(userId,dto));
+	@PutMapping("/update-profile")
+	public ResponseEntity<UserResponseDTO> updateProfile(
+	                                                     @RequestBody UserUpdateDTO dto ) {
+		 String email = ((UserDetails) SecurityContextHolder.getContext()
+                 .getAuthentication().getPrincipal()).getUsername();
+	    return ResponseEntity.ok(serv.updateUserProfile(email,dto));
 	}
-	@PutMapping("/change-password/{userId}")
-	public ResponseEntity<String> changePassword(@PathVariable String userId,
+	@PutMapping("/change-password")
+	@Operation(
+		    summary = "Update user profile",
+		    description = "Update user profile details by userId",
+		    security = @SecurityRequirement(name = "bearerAuth")
+		)
+	public ResponseEntity<String> changePassword(
 	                                             @RequestBody ChangePasswordDTO dto) {
-	    return ResponseEntity.ok(serv.changePassword(userId,dto));
+		String email = ((UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal()).getUsername();
+		System.out.println(email);	    
+		return ResponseEntity.ok(serv.changePassword(email,dto));
 	}
 	@PostMapping("/delete")
+	@Operation(
+		    summary = "Update user profile",
+		    description = "Update user profile details by userId",
+		    security = @SecurityRequirement(name = "bearerAuth")
+		)
 	public ResponseEntity<String> deleteAccount(@RequestBody UserLoginDTO dto){
 		return ResponseEntity.ok(serv.deleteUser(dto));
 	}

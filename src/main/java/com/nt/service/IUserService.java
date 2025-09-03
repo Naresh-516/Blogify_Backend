@@ -16,6 +16,5 @@ public String registerUser(UserRegisterDTO dto);
 public UserResponseDTO updateUserProfile(String userId, UserUpdateDTO dto);
 public UserResponseDTO loginUser(UserLoginDTO dto);
 public String changePassword(String userId, ChangePasswordDTO dto);
-public Optional<Users> findById(String userId);
 public String deleteUser(UserLoginDTO dto);
 }

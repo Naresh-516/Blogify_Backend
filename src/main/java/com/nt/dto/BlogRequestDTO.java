@@ -7,7 +7,5 @@ public class BlogRequestDTO {
 	private String title;
 	private String content;
 	private String tags;
-	private String userId; 
-	
 
 }

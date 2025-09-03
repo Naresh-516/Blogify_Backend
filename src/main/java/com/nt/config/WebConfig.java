@@ -10,13 +10,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Apply CORS to all endpoints
-                .allowedOrigins("http://localhost:5173") // Allow your frontend domain
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed HTTP methods
-                .allowedHeaders("*") // Allow any headers
-                .allowCredentials(true); // Allow credentials (cookies, authorization headers, etc.)
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173", "http://localhost:8080") 
+                // add Swagger UI origin also if it's served separately
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization") // 👈 expose JWT so frontend/Swagger can read it
+                .allowCredentials(true);
     }
 }
