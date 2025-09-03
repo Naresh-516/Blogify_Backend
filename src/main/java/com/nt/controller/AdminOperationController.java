@@ -17,7 +17,7 @@ import com.nt.service.BlogServiceImpl;
 
 @RestController
 @RequestMapping("/admin")
-@CrossOrigin(origins = {"https://blogifyverse.netlify.app", "http://localhost:5173"}) 
+@CrossOrigin(origins = {"https://blogifyverse.netlify.app"}) 
 public class AdminOperationController {
 
     @Autowired

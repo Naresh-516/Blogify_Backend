@@ -13,8 +13,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:8080") 
-                // add Swagger UI origin also if it's served separately
+        .allowedOriginPatterns(
+                "http://localhost:*",          // local dev
+                "https://*.netlify.app"        // all Netlify deploys
+        )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization") // 👈 expose JWT so frontend/Swagger can read it
