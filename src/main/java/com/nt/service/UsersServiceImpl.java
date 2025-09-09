@@ -53,20 +53,6 @@ public class UsersServiceImpl implements IUserService{
 
 	@Override
 	public UserResponseDTO loginUser(UserLoginDTO request) {
-//		Optional<Users> optionaluser=userrepo.findByEmail(dto.getEmail().toLowerCase());
-//		if(optionaluser.isEmpty()) return null;
-//		Users user=optionaluser.get();
-//		if(!passwordEncoder.matches(dto.getPassword(),user.getPassword())) {
-//			return null;
-//		}
-//		UserResponseDTO res=new UserResponseDTO();
-//		res.setId(user.getId());
-//		res.setName(user.getName());
-//		res.setEmail(user.getEmail());
-//		res.setGender(user.getGender());
-//		res.setMobile(user.getMobile());
-//		res.setAddress(user.getAddress());
-//		return res;
 		try {
     	    authenticationManager.authenticate(
     	        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -88,8 +74,6 @@ public class UsersServiceImpl implements IUserService{
 		res.setAddress(user.getAddress());
 		res.setToken(token);
 		return res;
-
-       // return new AuthResponse(token, user.getMail(), user.getRole());
 	}
 
 

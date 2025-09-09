@@ -17,7 +17,7 @@ import com.nt.service.BlogServiceImpl;
 
 @RestController
 @RequestMapping("/admin")
-@CrossOrigin(origins = {"https://blogifyverse.netlify.app"}) 
+@CrossOrigin(origins = {"https://blogifyverse.netlify.app,http://localhost:5173/"}) 
 public class AdminOperationController {
 
     @Autowired
@@ -55,7 +55,7 @@ public class AdminOperationController {
             dto.setEmail(user.getEmail());
             dto.setMobile(user.getMobile());
             dto.setAddress(user.getAddress());
-            dto.setBlogs(user.getBlogs()); // This will automatically populate because of @DBRef
+            dto.setBlogs(blogserv.getBlogsByUser02(user.getId()));
             return dto;
         }).collect(Collectors.toList());
 

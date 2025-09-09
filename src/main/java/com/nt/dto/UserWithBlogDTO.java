@@ -14,7 +14,7 @@ public class UserWithBlogDTO {
 	 private String email;
 	 private String address;
 	 private String mobile;
-	 private List<Blog> blogs=new ArrayList<Blog>();
+	 private List<BlogResponseDTO> blogs=new ArrayList<BlogResponseDTO>();
 
 
 }

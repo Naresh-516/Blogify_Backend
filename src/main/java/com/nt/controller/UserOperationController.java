@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "https://blogifyverse.netlify.app") 
+@CrossOrigin(origins = "https://blogifyverse.netlify.app,http://localhost:5173/") 
 public class UserOperationController {
 	@Autowired
 	private IUserService serv;
@@ -51,11 +51,6 @@ public class UserOperationController {
 	    return ResponseEntity.ok(serv.updateUserProfile(email,dto));
 	}
 	@PutMapping("/change-password")
-	@Operation(
-		    summary = "Update user profile",
-		    description = "Update user profile details by userId",
-		    security = @SecurityRequirement(name = "bearerAuth")
-		)
 	public ResponseEntity<String> changePassword(
 	                                             @RequestBody ChangePasswordDTO dto) {
 		String email = ((UserDetails) SecurityContextHolder.getContext()
@@ -64,11 +59,6 @@ public class UserOperationController {
 		return ResponseEntity.ok(serv.changePassword(email,dto));
 	}
 	@PostMapping("/delete")
-	@Operation(
-		    summary = "Update user profile",
-		    description = "Update user profile details by userId",
-		    security = @SecurityRequirement(name = "bearerAuth")
-		)
 	public ResponseEntity<String> deleteAccount(@RequestBody UserLoginDTO dto){
 		return ResponseEntity.ok(serv.deleteUser(dto));
 	}

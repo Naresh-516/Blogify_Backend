@@ -11,6 +11,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 @Data
 @Document(collection = "users") // Collection name in MongoDB
@@ -31,8 +33,9 @@ public class Users implements UserDetails {
 
     private String address;
 
-    @DBRef(lazy = false)
-    private List<Blog> blogs=new ArrayList<Blog>();// Embedded documents or references
+//    @DBRef(lazy = false)
+//    @JsonIgnore
+//    private List<Blog> blogs=new ArrayList<Blog>();// Embedded documents or references
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -45,5 +48,17 @@ public class Users implements UserDetails {
 		// TODO Auto-generated method stub
 		return email;
 	}
+	 @Override
+	    public boolean equals(Object o) {
+	        if (this == o) return true;
+	        if (!(o instanceof Users)) return false;
+	        Users other = (Users) o;
+	        return id != null && id.equals(other.getId());
+	    }
+
+	    @Override
+	    public int hashCode() {
+	        return id != null ? id.hashCode() : 0;
+	    }
 
 }
